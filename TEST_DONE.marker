@@ -1,0 +1,7 @@
+QA testing complete for 2026-08-27
+Project: huella
+Build: ✅ API tsc + Angular 22 production
+Tests: 19/19 passing (Jest) + 26/26 endpoint smoke + 14/14 browser
+New tests: 1 added (SIZE_MISMATCH)
+Issues: 2 fixed (env Gambito, SIZE_MISMATCH copy)
+Published: ✅ Caddy (huella.proyectos.cristiancode.dev), ✅ Portfolio (es.ts+en.ts+pt.ts)
