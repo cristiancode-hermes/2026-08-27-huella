@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Bruno">
+  <rect width="200" height="200" fill="#E6EBE7"/>
+  <circle cx="100" cy="115" r="62" fill="#4A554E"/>
+  <circle cx="68" cy="58" r="24" fill="#161C18"/>
+  <circle cx="132" cy="58" r="24" fill="#161C18"/>
+  <circle cx="84" cy="110" r="6" fill="#F2F4F3"/>
+  <circle cx="116" cy="110" r="6" fill="#F2F4F3"/>
+</svg>

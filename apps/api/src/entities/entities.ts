@@ -5,6 +5,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -22,8 +23,8 @@ export class User {
   @Column({ type: 'varchar', length: 120 })
   passwordHash: string;
 
-  @Column({ type: 'varchar', length: 16, default: 'visitor' })
-  role: 'visitor' | 'staff' | 'admin';
+  @Column({ type: 'varchar', length: 16, default: 'tutor' })
+  role: 'tutor' | 'staff' | 'admin';
 
   @Column({ type: 'int', default: 0 })
   points: number;
@@ -31,12 +32,52 @@ export class User {
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
+  @OneToMany(() => Dog, (d: Dog) => d.user)
+  dogs?: Dog[];
+
   @OneToMany(() => Booking, (b: Booking) => b.user)
   bookings?: Booking[];
 }
 
-@Entity({ name: 'cafe_tables' })
-export class CafeTable {
+@Entity({ name: 'dogs' })
+export class Dog {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar' })
+  userId: string;
+
+  @ManyToOne(() => User, (u: User) => u.dogs, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user?: User;
+
+  @Column({ type: 'varchar', length: 60 })
+  name: string;
+
+  @Column({ type: 'varchar', length: 4 })
+  size: 'S' | 'M' | 'L';
+
+  @Column({ type: 'simple-json' })
+  vaccines: { rabiesUntil: string; polyvalentUntil: string };
+
+  @Column({ type: 'varchar', length: 16, default: 'social' })
+  temperament: 'social' | 'shy' | 'playful';
+
+  @Column({ type: 'varchar', length: 240, nullable: true })
+  photoUrl: string | null;
+
+  @Column({ type: 'boolean', default: false })
+  ready: boolean;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @OneToMany(() => Booking, (b: Booking) => b.dog)
+  bookings?: Booking[];
+}
+
+@Entity({ name: 'play_groups' })
+export class PlayGroup {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -46,112 +87,75 @@ export class CafeTable {
   @Column({ type: 'varchar', length: 80 })
   name: string;
 
+  @Column({ type: 'varchar', length: 4 })
+  size: 'S' | 'M' | 'L';
+
   @Column({ type: 'int' })
-  seats: number;
+  capacity: number;
 
   @Column({ type: 'int' })
   priceCents: number;
 
+  @Column({ type: 'text' })
+  description: string;
+
   @Column({ type: 'varchar', length: 240 })
   photoUrl: string;
-
-  @Column({ type: 'text' })
-  blurb: string;
 
   @Column({ type: 'int' })
   sortOrder: number;
 
-  @OneToMany(() => Booking, (b: Booking) => b.cafeTable)
+  @OneToMany(() => Slot, (s: Slot) => s.playGroup)
+  slots?: Slot[];
+
+  @OneToMany(() => Booking, (b: Booking) => b.playGroup)
   bookings?: Booking[];
 }
 
-@Entity({ name: 'games' })
-export class Game {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ type: 'varchar', length: 60, unique: true })
-  slug: string;
-
-  @Column({ type: 'varchar', length: 120 })
-  title: string;
-
-  @Column({ type: 'int' })
-  minPlayers: number;
-
-  @Column({ type: 'int' })
-  maxPlayers: number;
-
-  @Column({ type: 'int' })
-  minutes: number;
-
-  @Column({ type: 'real' })
-  weight: number;
-
-  @Column({ type: 'int' })
-  totalCopies: number;
-
-  @Column({ type: 'simple-json' })
-  mechanics: string[];
-
-  @Column({ type: 'varchar', length: 240 })
-  photoUrl: string;
-
-  @Column({ type: 'int', default: 0 })
-  copySurchargeCents: number;
-}
-
-@Entity({ name: 'cafe_days' })
-export class CafeDay {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ type: 'varchar', length: 10, unique: true })
-  day: string;
-
-  @Column({ type: 'varchar', length: 16 })
-  status: 'open' | 'limited' | 'closed';
-
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  note: string | null;
-
-  @Column({ type: 'int', nullable: true })
-  maxCovers: number | null;
-
-  @OneToMany(() => Slot, (s: Slot) => s.cafeDay)
-  slots?: Slot[];
-}
-
 @Entity({ name: 'slots' })
-@Index(['day', 'startTime'], { unique: true })
 export class Slot {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 36 })
-  cafeDayId: string;
+  @Column({ type: 'varchar' })
+  playGroupId: string;
 
-  @ManyToOne(() => CafeDay, (d: CafeDay) => d.slots, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'cafeDayId' })
-  cafeDay?: CafeDay;
+  @ManyToOne(() => PlayGroup, (g: PlayGroup) => g.slots, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'playGroupId' })
+  playGroup?: PlayGroup;
 
-  @Column({ type: 'varchar', length: 10 })
-  day: string;
+  @Column({ type: 'varchar', length: 16 })
+  kind: 'drop_off' | 'pick_up';
 
   @Column({ type: 'varchar', length: 5 })
   startTime: string;
 
-  @Column({ type: 'varchar', length: 5 })
-  endTime: string;
+  @Column({ type: 'varchar', length: 40 })
+  label: string;
+}
 
-  @Column({ type: 'int' })
-  sortKey: number;
+@Entity({ name: 'yard_days' })
+export class YardDay {
+  @PrimaryColumn({ type: 'varchar', length: 10 })
+  date: string;
+
+  @Column({ type: 'varchar', length: 16, default: 'open' })
+  status: 'open' | 'limited' | 'closed';
+
+  @Column({ type: 'varchar', length: 180, nullable: true })
+  note: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  capacityOverride: number | null;
 }
 
 @Entity({ name: 'addons' })
 export class Addon {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'varchar', length: 40, unique: true })
+  slug: string;
 
   @Column({ type: 'varchar', length: 80 })
   name: string;
@@ -164,66 +168,78 @@ export class Addon {
 }
 
 @Entity({ name: 'bookings' })
+@Index('booking_dog_day', ['dogId', 'visitDate'])
 export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'varchar' })
   userId: string;
 
-  @ManyToOne(() => User, (u: User) => u.bookings)
+  @ManyToOne(() => User, (u: User) => u.bookings, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user?: User;
 
-  @Column({ type: 'varchar', length: 36 })
-  cafeTableId: string;
+  @Column({ type: 'varchar' })
+  dogId: string;
 
-  @ManyToOne(() => CafeTable, (t: CafeTable) => t.bookings)
-  @JoinColumn({ name: 'cafeTableId' })
-  cafeTable?: CafeTable;
+  @ManyToOne(() => Dog, (d: Dog) => d.bookings, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'dogId' })
+  dog?: Dog;
 
-  @Column({ type: 'varchar', length: 36 })
-  slotId: string;
+  @Column({ type: 'varchar' })
+  playGroupId: string;
+
+  @ManyToOne(() => PlayGroup, (g: PlayGroup) => g.bookings, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'playGroupId' })
+  playGroup?: PlayGroup;
+
+  @Column({ type: 'varchar', length: 10 })
+  visitDate: string;
+
+  @Column({ type: 'varchar' })
+  dropOffSlotId: string;
 
   @ManyToOne(() => Slot)
-  @JoinColumn({ name: 'slotId' })
-  slot?: Slot;
+  @JoinColumn({ name: 'dropOffSlotId' })
+  dropOffSlot?: Slot;
 
-  @Column({ type: 'int' })
-  partySize: number;
+  @Column({ type: 'varchar' })
+  pickUpSlotId: string;
 
-  @Column({ type: 'varchar', length: 20 })
-  status: 'pending' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled' | 'expired';
+  @ManyToOne(() => Slot)
+  @JoinColumn({ name: 'pickUpSlotId' })
+  pickUpSlot?: Slot;
+
+  @Column({ type: 'varchar', length: 20, default: 'pending' })
+  status: 'pending' | 'confirmed' | 'checked_in' | 'picked_up' | 'cancelled' | 'expired';
 
   @Column({ type: 'datetime', nullable: true })
   expiresAt: Date | null;
 
-  @Column({ type: 'varchar', length: 16, unique: true })
+  @Column({ type: 'varchar', length: 12, unique: true })
   code: string;
 
   @Column({ type: 'text', nullable: true })
   qrSvg: string | null;
 
-  @Column({ type: 'varchar', length: 240, nullable: true })
+  @Column({ type: 'text', nullable: true })
   qrUrl: string | null;
 
-  @Column({ type: 'datetime', nullable: true })
-  confirmedAt: Date | null;
+  @Column({ type: 'int', default: 0 })
+  totalCents: number;
 
   @Column({ type: 'datetime', nullable: true })
   checkedInAt: Date | null;
 
   @Column({ type: 'datetime', nullable: true })
-  completedAt: Date | null;
+  pickedUpAt: Date | null;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @OneToMany(() => BookingLine, (l: BookingLine) => l.booking)
   lines?: BookingLine[];
-
-  @OneToMany(() => QueueEntry, (q: QueueEntry) => q.booking)
-  queue?: QueueEntry[];
 }
 
 @Entity({ name: 'booking_lines' })
@@ -231,7 +247,7 @@ export class BookingLine {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'varchar' })
   bookingId: string;
 
   @ManyToOne(() => Booking, (b: Booking) => b.lines, { onDelete: 'CASCADE' })
@@ -239,12 +255,16 @@ export class BookingLine {
   booking?: Booking;
 
   @Column({ type: 'varchar', length: 16 })
-  kind: 'table' | 'game' | 'addon';
+  kind: 'day' | 'addon';
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
-  refId: string | null;
+  @Column({ type: 'varchar', nullable: true })
+  addonId: string | null;
 
-  @Column({ type: 'varchar', length: 120 })
+  @ManyToOne(() => Addon, { nullable: true })
+  @JoinColumn({ name: 'addonId' })
+  addon?: Addon | null;
+
+  @Column({ type: 'varchar', length: 80 })
   label: string;
 
   @Column({ type: 'int', default: 1 })
@@ -254,33 +274,7 @@ export class BookingLine {
   unitCents: number;
 
   @Column({ type: 'int' })
-  lineCents: number;
-}
-
-@Entity({ name: 'queue_entries' })
-export class QueueEntry {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ type: 'varchar', length: 36 })
-  bookingId: string;
-
-  @ManyToOne(() => Booking, (b: Booking) => b.queue, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'bookingId' })
-  booking?: Booking;
-
-  @Column({ type: 'varchar', length: 36 })
-  gameId: string;
-
-  @ManyToOne(() => Game)
-  @JoinColumn({ name: 'gameId' })
-  game?: Game;
-
-  @Column({ type: 'int' })
-  position: number;
-
-  @Column({ type: 'boolean', default: false })
-  isNowPlaying: boolean;
+  subtotalCents: number;
 }
 
 @Entity({ name: 'reviews' })
@@ -288,23 +282,31 @@ export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 36, unique: true })
+  @Column({ type: 'varchar', unique: true })
   bookingId: string;
 
   @ManyToOne(() => Booking)
   @JoinColumn({ name: 'bookingId' })
   booking?: Booking;
 
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'varchar' })
   userId: string;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
-  gameId: string | null;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  user?: User;
+
+  @Column({ type: 'varchar' })
+  playGroupId: string;
+
+  @ManyToOne(() => PlayGroup)
+  @JoinColumn({ name: 'playGroupId' })
+  playGroup?: PlayGroup;
 
   @Column({ type: 'int' })
   rating: number;
 
-  @Column({ type: 'varchar', length: 400, nullable: true })
+  @Column({ type: 'text', nullable: true })
   comment: string | null;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
@@ -316,32 +318,31 @@ export class EmailLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 36 })
+  @Column({ type: 'varchar' })
   bookingId: string;
 
-  @Column({ type: 'varchar', length: 180 })
+  @Column({ type: 'varchar' })
   toEmail: string;
 
-  @Column({ type: 'varchar', length: 160 })
+  @Column({ type: 'varchar' })
   subject: string;
 
   @Column({ type: 'text' })
   body: string;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  sentAt: Date;
+  createdAt: Date;
 }
 
 export const ALL_ENTITIES = [
   User,
-  CafeTable,
-  Game,
-  CafeDay,
+  Dog,
+  PlayGroup,
   Slot,
+  YardDay,
   Addon,
   Booking,
   BookingLine,
-  QueueEntry,
   Review,
   EmailLog,
 ];

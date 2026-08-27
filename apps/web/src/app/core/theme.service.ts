@@ -1,6 +1,6 @@
 import { Injectable, effect, signal } from '@angular/core';
 
-const THEME_KEY = 'gambito.theme';
+const THEME_KEY = 'huella_theme';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {

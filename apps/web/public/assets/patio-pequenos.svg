@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Patio de manada pequeña">
+  <rect width="800" height="500" fill="#E6EBE7"/>
+  <rect x="0" y="320" width="800" height="180" fill="#C5CFC8"/>
+  <rect x="40" y="200" width="720" height="140" fill="#215C38"/>
+  <circle cx="120" cy="160" r="70" fill="#18472B"/>
+  <circle cx="680" cy="150" r="90" fill="#18472B"/>
+  <rect x="200" y="260" width="80" height="40" rx="8" fill="#A33B16"/>
+  <rect x="320" y="250" width="60" height="50" rx="8" fill="#2F7A4A"/>
+  <ellipse cx="400" cy="380" rx="180" ry="24" fill="#4A554E" opacity=".25"/>
+</svg>

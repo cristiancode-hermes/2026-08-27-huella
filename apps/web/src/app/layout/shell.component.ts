@@ -11,21 +11,21 @@ import { ThemeService } from '../core/theme.service';
       <div class="wrap header-inner">
         <a routerLink="/" class="brand">
           <span class="brand-mark" aria-hidden="true"></span>
-          Gambito
+          Huella
         </a>
         <button class="nav-toggle" type="button" (click)="open.set(!open())" [attr.aria-expanded]="open()" aria-label="Menú">
           <span></span><span></span>
         </button>
         <nav class="nav" [class.open]="open()">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="open.set(false)">Hoy</a>
-          <a routerLink="/mesas" routerLinkActive="active" (click)="open.set(false)">Mesas</a>
-          <a routerLink="/juegos" routerLinkActive="active" (click)="open.set(false)">Juegos</a>
-          <a routerLink="/reservar" routerLinkActive="active" (click)="open.set(false)">Reservar</a>
+          <a routerLink="/grupos" routerLinkActive="active" (click)="open.set(false)">Manadas</a>
+          <a routerLink="/checkout" routerLinkActive="active" (click)="open.set(false)">Reservar</a>
           @if (auth.isAuthenticated()) {
-            <a routerLink="/mis-partidas" routerLinkActive="active" (click)="open.set(false)">Mis partidas</a>
+            <a routerLink="/perros" routerLinkActive="active" (click)="open.set(false)">Mis perros</a>
+            <a routerLink="/mis-visitas" routerLinkActive="active" (click)="open.set(false)">Mis visitas</a>
           }
           @if (auth.isStaff()) {
-            <a routerLink="/staff" routerLinkActive="active" (click)="open.set(false)">Sala</a>
+            <a routerLink="/staff" routerLinkActive="active" (click)="open.set(false)">Patio</a>
           }
         </nav>
         <div class="header-actions">
@@ -38,6 +38,7 @@ import { ThemeService } from '../core/theme.service';
           </button>
           @if (auth.user(); as u) {
             <span class="who">{{ u.username }} · {{ u.points }} pts</span>
+            <a class="btn btn-ghost" routerLink="/cuenta">Cuenta</a>
             <button class="btn btn-ghost" type="button" (click)="auth.logout()">Salir</button>
           } @else {
             <a class="btn btn-primary" routerLink="/login">Entrar</a>
@@ -49,7 +50,7 @@ import { ThemeService } from '../core/theme.service';
       <router-outlet />
     </main>
     <footer class="site-footer">
-      <div class="wrap">La caja no se inventa. Se cuenta.</div>
+      <div class="wrap">El perro no se inventa. Se ficha. El pase no se enseña: se escanea.</div>
     </footer>
   `,
 })

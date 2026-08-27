@@ -33,37 +33,25 @@ export function addMadridDays(isoDate: string, delta: number): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export function nightSlotSortKey(startTime: string): number {
-  if (startTime === '00:00') return 24;
-  const h = Number(startTime.slice(0, 2));
-  return Number.isFinite(h) ? h : 99;
-}
-
-export function sortNightSlots<T extends { startTime: string; sortKey?: number }>(slots: T[]): T[] {
-  return [...slots].sort((a, b) => {
-    const ka = a.sortKey ?? nightSlotSortKey(a.startTime);
-    const kb = b.sortKey ?? nightSlotSortKey(b.startTime);
-    return ka - kb;
-  });
-}
-
-export function hoursUntilSlotStart(date: string, startTime: string, now = new Date()): number {
+export function hoursUntilDateStart(date: string, now = new Date()): number {
   const [y, m, d] = date.split('-').map(Number);
-  const [hh, mm] = startTime.split(':').map(Number);
-  const hour = startTime === '00:00' ? 24 : hh;
-  const guess = new Date(Date.UTC(y, m - 1, d, hour === 24 ? 0 : hour, mm));
-  if (hour === 24) guess.setUTCDate(guess.getUTCDate() + 1);
+  const guess = new Date(Date.UTC(y, m - 1, d, 8, 0));
   for (let i = 0; i < 4; i++) {
     const p = madridNowParts(guess);
-    const wantHour = hour === 24 ? 0 : hh;
-    const want = `${String(wantHour).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-    const wantDate = hour === 24 ? addMadridDays(date, 1) : date;
-    if (p.date === wantDate && p.hhmm === want) break;
+    if (p.date === date && p.hour === 8 && p.minute === 0) break;
     const deltaMin =
-      (wantHour * 60 + mm) -
+      8 * 60 -
       (p.hour * 60 + p.minute) +
-      (wantDate > p.date ? 24 * 60 : wantDate < p.date ? -24 * 60 : 0);
+      (date > p.date ? 24 * 60 : date < p.date ? -24 * 60 : 0);
     guess.setUTCMinutes(guess.getUTCMinutes() + deltaMin);
   }
   return (guess.getTime() - now.getTime()) / 36e5;
+}
+
+export function vaccinesReady(
+  vaccines: { rabiesUntil?: string; polyvalentUntil?: string } | null | undefined,
+  today = madridToday(),
+): boolean {
+  if (!vaccines?.rabiesUntil || !vaccines?.polyvalentUntil) return false;
+  return vaccines.rabiesUntil >= today && vaccines.polyvalentUntil >= today;
 }

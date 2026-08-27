@@ -1,37 +1,56 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { API, Addon, Booking, CafeTable, Game, Slot } from '../shared/models';
+import { API, Addon, Booking, Dog, OccupancyPoint, PlayGroup, Slot } from '../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
 
-  tables() {
-    return this.http.get<CafeTable[]>(`${API}/tables`);
+  groups() {
+    return this.http.get<PlayGroup[]>(`${API}/groups`);
   }
-  table(id: string) {
-    return this.http.get<CafeTable>(`${API}/tables/${id}`);
+  group(id: string) {
+    return this.http.get<PlayGroup>(`${API}/groups/${id}`);
   }
-  games(params?: { players?: number; maxMinutes?: number; q?: string; slotId?: string }) {
-    return this.http.get<Game[]>(`${API}/games`, { params: params as any });
-  }
-  game(id: string, slotId?: string) {
-    return this.http.get<Game>(`${API}/games/${id}`, { params: slotId ? { slotId } : {} });
-  }
-  slots(date?: string) {
-    return this.http.get<Slot[]>(`${API}/slots`, { params: date ? { date } : {} });
+  slots(id: string, date: string) {
+    return this.http.get<{
+      date: string;
+      yard: { date: string; status: string; note: string | null };
+      freeSlotsToday: number;
+      dropOff: Slot[];
+      pickUp: Slot[];
+    }>(`${API}/groups/${id}/slots`, { params: { date } });
   }
   addons() {
     return this.http.get<Addon[]>(`${API}/addons`);
   }
-  cafeToday() {
-    return this.http.get<{ status: string; note: string | null; day: string }>(`${API}/cafe-days/today`);
+  dogs() {
+    return this.http.get<Dog[]>(`${API}/dogs`);
   }
-  nowPlaying() {
-    return this.http.get<Array<{ tableName: string; game: Game }>>(`${API}/now-playing`);
+  dog(id: string) {
+    return this.http.get<Dog>(`${API}/dogs/${id}`);
   }
-  hold(slotId: string, body: { tableId: string; partySize: number; gameIds: string[]; addonIds?: string[] }) {
-    return this.http.post<Booking>(`${API}/slots/${slotId}/hold`, body);
+  createDog(body: Partial<Dog>) {
+    return this.http.post<Dog>(`${API}/dogs`, body);
+  }
+  patchDog(id: string, body: Partial<Dog>) {
+    return this.http.patch<Dog>(`${API}/dogs/${id}`, body);
+  }
+  hold(body: {
+    dogId: string;
+    playGroupId: string;
+    visitDate: string;
+    dropOffSlotId: string;
+    pickUpSlotId: string;
+    addonIds: string[];
+  }) {
+    return this.http.post<Booking>(`${API}/bookings/hold`, body);
+  }
+  confirm(id: string) {
+    return this.http.post<Booking>(`${API}/bookings/${id}/confirm`, {});
+  }
+  cancel(id: string) {
+    return this.http.post<Booking>(`${API}/bookings/${id}/cancel`, {});
   }
   bookings() {
     return this.http.get<Booking[]>(`${API}/bookings`);
@@ -39,28 +58,22 @@ export class ApiService {
   booking(id: string) {
     return this.http.get<Booking>(`${API}/bookings/${id}`);
   }
-  confirm(id: string) {
-    return this.http.post<{ booking: Booking; qrSvg: string; qrUrl: string }>(`${API}/bookings/${id}/confirm`, {});
-  }
-  cancel(id: string) {
-    return this.http.post<Booking>(`${API}/bookings/${id}/cancel`, {});
-  }
   ticket(code: string) {
-    return this.http.get<{ booking: Booking; qrSvg: string; qrUrl: string }>(`${API}/bookings/ticket/${code}`);
+    return this.http.get<Booking>(`${API}/bookings/ticket/${code}`);
   }
-  queue(id: string, body: { order: string[]; nowPlayingGameId?: string }) {
-    return this.http.patch(`${API}/bookings/${id}/queue`, body);
+  checkIn(codeOrUrl: string) {
+    return this.http.post<Booking>(`${API}/staff/check-in`, { codeOrUrl });
   }
-  checkIn(code: string) {
-    return this.http.post<Booking>(`${API}/staff/check-in`, { code });
+  checkOut(codeOrUrl: string) {
+    return this.http.post<Booking>(`${API}/staff/check-out`, { codeOrUrl });
   }
-  patchDay(date: string, body: { status: string; note?: string }) {
-    return this.http.patch(`${API}/staff/cafe-days/${date}`, body);
+  pack() {
+    return this.http.get<Booking[]>(`${API}/staff/pack`);
   }
   stats() {
-    return this.http.get<{ covers: number; copiesOut: number; revenue: number }>(`${API}/stats/today`);
+    return this.http.get<{ series: OccupancyPoint[] }>(`${API}/staff/stats`);
   }
-  points() {
-    return this.http.get<{ points: number }>(`${API}/me/points`);
+  review(body: { bookingId: string; rating: number; comment?: string }) {
+    return this.http.post(`${API}/reviews`, body);
   }
 }

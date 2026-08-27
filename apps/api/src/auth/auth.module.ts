@@ -18,7 +18,7 @@ import { StaffGuard } from './current-user';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET', 'gambito-dev-secret-change-me'),
+        secret: config.get<string>('JWT_SECRET', 'huella-dev-secret-change-me'),
         signOptions: { expiresIn: '7d' },
       }),
     }),

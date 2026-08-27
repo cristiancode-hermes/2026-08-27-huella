@@ -1,207 +1,240 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
 import { ApiService } from '../core/api.service';
-import { Addon, CafeTable, Game, Slot, eur } from '../shared/models';
-import { humanizeApiError, scrollToHoldAction } from '../shared/humanize-error';
+import { Addon, Dog, PlayGroup, Slot, euros, humanConflict } from '../shared/models';
 
 @Component({
   selector: 'app-checkout',
   imports: [FormsModule, RouterLink],
   template: `
-    <div class="wrap">
-      @if (loadError()) {
-        <section class="state-screen" role="alert">
-          <h1>No se pudo cargar la reserva</h1>
-          <p class="lede">Revisa la conexión e inténtalo de nuevo.</p>
-          <button class="btn btn-primary" type="button" (click)="reload()">Reintentar</button>
-        </section>
-      } @else if (loading()) {
-        <section class="state-screen">
-          <h1>Reservar</h1>
-          <p class="muted">Cargando mesas y franjas…</p>
-        </section>
-      } @else if (!tables().length || !slots().length) {
-        <section class="state-screen">
-          <h1>Hoy no hay mesas libres</h1>
-          <p class="lede">Vuelve más tarde o mira el plano de la sala.</p>
-          <a class="btn btn-primary" routerLink="/">Ver sala</a>
-        </section>
-      } @else {
-        <h1>Reservar</h1>
-        <p class="lede">Mesa, franja y mochila. El total se calcula antes de retener.</p>
-        <h2>Mesa</h2>
-        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
-          @for (t of tables(); track t.id) {
-            <button type="button" class="slot-chip" [class.selected]="tableId() === t.id" (click)="tableId.set(t.id)">
-              <span class="slot-time">{{ t.name }}</span>
-              <span class="slot-state">{{ t.seats }} plazas · {{ eur(t.priceCents) }}</span>
-            </button>
+    <div class="wrap checkout">
+      <div>
+        <h1>Reservar el día</h1>
+        <p class="lede">Elige perro, manada, entrada y recogida. El total se calcula antes de retener.</p>
+
+        <label for="dog">Perro</label>
+        <select id="dog" [ngModel]="dogId()" (ngModelChange)="dogId.set($event)">
+          <option value="">Selecciona</option>
+          @for (d of dogs(); track d.id) {
+            <option [value]="d.id">{{ d.name }} · {{ d.size }} {{ d.ready ? '' : '(vacunas)' }}</option>
           }
-        </div>
-        <h2>Franja</h2>
-        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr))">
-          @for (s of slots(); track s.id) {
-            <button type="button" class="slot-chip" [class.selected]="slotId() === s.id" (click)="pickSlot(s.id)">
+        </select>
+        @if (!dogs().length) {
+          <p><a routerLink="/perros/nuevo">Ficha un perro primero</a></p>
+        }
+
+        <label for="group">Manada</label>
+        <select id="group" [ngModel]="groupId()" (ngModelChange)="onGroup($event)">
+          <option value="">Selecciona</option>
+          @for (g of groups(); track g.id) {
+            <option [value]="g.id">{{ g.name }} · {{ g.freeSlotsToday }} huecos hoy</option>
+          }
+        </select>
+
+        <label for="date">Fecha</label>
+        <input id="date" type="date" [ngModel]="visitDate()" (ngModelChange)="onDate($event)" />
+
+        <h3>Entrada</h3>
+        <div class="rail">
+          @for (s of dropOff(); track s.id) {
+            <button type="button" class="slot-chip" [class.selected]="dropId() === s.id" (click)="dropId.set(s.id)">
               <span class="slot-time">{{ s.startTime }}</span>
-              <span class="slot-state">{{ s.endTime }}</span>
+              <span class="slot-state">Libre</span>
             </button>
           }
         </div>
-        <label>Tamaño del grupo
-          <input type="number" min="1" [ngModel]="party()" (ngModelChange)="party.set(+$event)" />
-        </label>
-        <h2>Mochila</h2>
-        <div class="picker">
-          @for (g of games(); track g.id) {
-            <label [class.disabled]="g.availableCopies < 1">
-              <input type="checkbox" [disabled]="g.availableCopies < 1"
-                [ngModel]="selectedGames().includes(g.id)"
-                (ngModelChange)="toggleGame(g.id, $event)" />
-              <span>
-                <strong>{{ g.title }}</strong>
-                <span class="muted"> · {{ g.availableCopies }} copias</span>
-              </span>
-            </label>
+        <h3>Recogida</h3>
+        <div class="rail">
+          @for (s of pickUp(); track s.id) {
+            <button type="button" class="slot-chip" [class.selected]="pickId() === s.id" (click)="pickId.set(s.id)">
+              <span class="slot-time">{{ s.startTime }}</span>
+              <span class="slot-state">Libre</span>
+            </button>
           }
         </div>
-        <h2>Extras</h2>
+
+        <h3>Extras</h3>
         <div class="picker">
           @for (a of addons(); track a.id) {
             <label>
-              <input type="checkbox" [ngModel]="selectedAddons().includes(a.id)" (ngModelChange)="toggleAddon(a.id, $event)" />
-              <span>{{ a.name }} · {{ eur(a.priceCents) }}</span>
+              <input type="checkbox" [checked]="addonIds().includes(a.id)" (change)="toggleAddon(a.id)" />
+              <span>{{ a.name }} · {{ euros(a.priceCents) }}</span>
             </label>
           }
         </div>
-        <aside class="summary" id="hold-action">
-          <h3>Resumen</h3>
-          <ul>
-            @for (l of quote().lines; track l.label) {
-              <li><span>{{ l.label }}</span><span>{{ eur(l.lineCents) }}</span></li>
-            }
-          </ul>
-          <p><strong>Total {{ eur(quote().totalCents) }}</strong></p>
-          <button class="btn btn-primary" type="button" (click)="hold()" [disabled]="busy()">
-            {{ busy() ? 'Reteniendo…' : 'Retener 15 min' }}
-          </button>
-          @if (error()) {
-            <p class="form-error hold-error" role="alert">{{ error() }}</p>
+      </div>
+
+      <aside class="summary" id="hold-action">
+        <h3>Resumen</h3>
+        <ul>
+          @for (line of previewLines(); track line.label) {
+            <li><span>{{ line.label }}</span><span>{{ euros(line.cents) }}</span></li>
           }
-        </aside>
-      }
+        </ul>
+        <p><strong>Total {{ euros(previewTotal()) }}</strong></p>
+        @if (holdError()) {
+          <p class="hold-error form-error" role="alert">{{ holdError() }}</p>
+        }
+        <button class="btn btn-primary" type="button" (click)="hold()" [disabled]="busy()">
+          {{ busy() ? 'Reteniendo…' : 'Retener 15 min' }}
+        </button>
+        @if (heldId()) {
+          <p class="muted">Retención hasta {{ timer() }}</p>
+          <button class="btn btn-accent" type="button" (click)="pay()">Confirmar y pagar</button>
+        }
+      </aside>
     </div>
   `,
 })
 export class CheckoutPageComponent implements OnInit, OnDestroy {
   private readonly api = inject(ApiService);
-  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  readonly tables = signal<CafeTable[]>([]);
-  readonly slots = signal<Slot[]>([]);
-  readonly games = signal<Game[]>([]);
+  private readonly route = inject(ActivatedRoute);
+  readonly dogs = signal<Dog[]>([]);
+  readonly groups = signal<PlayGroup[]>([]);
   readonly addons = signal<Addon[]>([]);
-  readonly tableId = signal('');
-  readonly slotId = signal('');
-  readonly party = signal(2);
-  readonly selectedGames = signal<string[]>([]);
-  readonly selectedAddons = signal<string[]>([]);
-  readonly error = signal('');
-  readonly loadError = signal(false);
-  readonly loading = signal(true);
+  readonly dropOff = signal<Slot[]>([]);
+  readonly pickUp = signal<Slot[]>([]);
+  readonly dogId = signal('');
+  readonly groupId = signal('');
+  readonly visitDate = signal(
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date()),
+  );
+  readonly dropId = signal('');
+  readonly pickId = signal('');
+  readonly addonIds = signal<string[]>([]);
+  readonly holdError = signal('');
   readonly busy = signal(false);
-  readonly eur = eur;
+  readonly heldId = signal('');
+  readonly expiresAt = signal<number | null>(null);
+  readonly timer = signal('');
+  private tick: ReturnType<typeof setInterval> | null = null;
 
-  readonly quote = computed(() => {
-    const t = this.tables().find((x) => x.id === this.tableId());
-    const gs = this.games().filter((g) => this.selectedGames().includes(g.id));
-    const as = this.addons().filter((a) => this.selectedAddons().includes(a.id));
-    const lines: Array<{ label: string; lineCents: number }> = [];
-    if (t) lines.push({ label: `Mesa ${t.name}`, lineCents: t.priceCents });
-    for (const g of gs) lines.push({ label: g.title, lineCents: g.copySurchargeCents });
-    for (const a of as) lines.push({ label: a.name, lineCents: a.priceCents });
-    return { lines, totalCents: lines.reduce((s, l) => s + l.lineCents, 0) };
+  readonly selectedGroup = computed(() => this.groups().find((g) => g.id === this.groupId()) || null);
+  readonly previewLines = computed(() => {
+    const lines: { label: string; cents: number }[] = [];
+    const g = this.selectedGroup();
+    if (g) lines.push({ label: `Día en ${g.name}`, cents: g.priceCents });
+    for (const a of this.addons()) {
+      if (this.addonIds().includes(a.id)) lines.push({ label: a.name, cents: a.priceCents });
+    }
+    return lines;
   });
+  readonly previewTotal = computed(() => this.previewLines().reduce((s, l) => s + l.cents, 0));
+  euros = euros;
 
   ngOnInit() {
-    this.reload();
+    const qGroup = this.route.snapshot.queryParamMap.get('group') || '';
+    this.api.dogs().subscribe((d) => this.dogs.set(d));
+    this.api.groups().subscribe((g) => {
+      this.groups.set(g);
+      if (qGroup) {
+        this.groupId.set(qGroup);
+        this.loadSlots();
+      }
+    });
+    this.api.addons().subscribe((a) => this.addons.set(a));
+    document.addEventListener('visibilitychange', this.resync);
   }
 
-  ngOnDestroy() {}
+  ngOnDestroy() {
+    if (this.tick) clearInterval(this.tick);
+    document.removeEventListener('visibilitychange', this.resync);
+  }
 
-  reload() {
-    const preset = this.route.snapshot.queryParamMap.get('tableId') || '';
-    this.loading.set(true);
-    this.loadError.set(false);
-    this.error.set('');
-    forkJoin({
-      tables: this.api.tables(),
-      slots: this.api.slots(),
-      games: this.api.games(),
-      addons: this.api.addons(),
-    }).subscribe({
-      next: (res) => {
-        this.tables.set(res.tables);
-        this.slots.set(res.slots);
-        this.games.set(res.games);
-        this.addons.set(res.addons);
-        this.tableId.set(preset || res.tables[0]?.id || '');
-        this.slotId.set(res.slots[0]?.id || '');
-        if (this.slotId()) this.reloadGames();
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-        this.loadError.set(true);
+  onGroup(id: string) {
+    this.groupId.set(id);
+    this.loadSlots();
+  }
+
+  onDate(d: string) {
+    this.visitDate.set(d);
+    this.loadSlots();
+  }
+
+  loadSlots() {
+    if (!this.groupId() || !this.visitDate()) return;
+    this.api.slots(this.groupId(), this.visitDate()).subscribe({
+      next: (s) => {
+        this.dropOff.set(s.dropOff);
+        this.pickUp.set(s.pickUp);
       },
     });
   }
 
-  pickSlot(id: string) {
-    this.slotId.set(id);
-    this.reloadGames();
-  }
-
-  reloadGames() {
-    this.api.games({ slotId: this.slotId() }).subscribe((g) => this.games.set(g));
-  }
-
-  toggleGame(id: string, on: boolean) {
-    const cur = this.selectedGames();
-    this.selectedGames.set(on ? [...cur, id] : cur.filter((x) => x !== id));
-  }
-
-  toggleAddon(id: string, on: boolean) {
-    const cur = this.selectedAddons();
-    this.selectedAddons.set(on ? [...cur, id] : cur.filter((x) => x !== id));
+  toggleAddon(id: string) {
+    const cur = this.addonIds();
+    this.addonIds.set(cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
   }
 
   hold() {
-    this.error.set('');
-    if (!this.tableId() || !this.slotId()) {
-      this.error.set('Elige mesa y franja');
-      scrollToHoldAction();
+    this.holdError.set('');
+    if (!this.dogId() || !this.groupId() || !this.dropId() || !this.pickId()) {
+      this.holdError.set('Elige perro, manada, entrada y recogida.');
+      this.scrollCta();
       return;
     }
     this.busy.set(true);
     this.api
-      .hold(this.slotId(), {
-        tableId: this.tableId(),
-        partySize: this.party(),
-        gameIds: this.selectedGames(),
-        addonIds: this.selectedAddons(),
+      .hold({
+        dogId: this.dogId(),
+        playGroupId: this.groupId(),
+        visitDate: this.visitDate(),
+        dropOffSlotId: this.dropId(),
+        pickUpSlotId: this.pickId(),
+        addonIds: this.addonIds(),
       })
       .subscribe({
         next: (b) => {
           this.busy.set(false);
-          void this.router.navigate(['/confirmacion', b.id]);
+          this.heldId.set(b.id);
+          this.expiresAt.set(b.expiresAt ? new Date(b.expiresAt).getTime() : null);
+          this.startTimer();
         },
         error: (err) => {
           this.busy.set(false);
-          this.error.set(humanizeApiError(err, 'No se pudo retener. Prueba otra mesa o franja.'));
-          scrollToHoldAction();
+          this.holdError.set(humanConflict(err));
+          this.scrollCta();
         },
       });
+  }
+
+  pay() {
+    const id = this.heldId();
+    if (!id) return;
+    this.busy.set(true);
+    this.api.confirm(id).subscribe({
+      next: (b) => {
+        this.busy.set(false);
+        void this.router.navigate(['/confirmacion', b.code]);
+      },
+      error: (err) => {
+        this.busy.set(false);
+        this.holdError.set(humanConflict(err));
+        this.scrollCta();
+      },
+    });
+  }
+
+  private scrollCta() {
+    document.getElementById('hold-action')?.scrollIntoView({ block: 'center' });
+  }
+
+  private resync = () => this.renderTimer();
+
+  private startTimer() {
+    if (this.tick) clearInterval(this.tick);
+    this.renderTimer();
+    this.tick = setInterval(() => this.renderTimer(), 1000);
+  }
+
+  private renderTimer() {
+    const exp = this.expiresAt();
+    if (!exp) return;
+    const left = Math.max(0, exp - Date.now());
+    const m = Math.floor(left / 60000);
+    const s = Math.floor((left % 60000) / 1000);
+    this.timer.set(`${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
   }
 }

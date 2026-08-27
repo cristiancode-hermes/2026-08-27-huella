@@ -27,6 +27,11 @@ export class LoginDto {
   @IsString()
   login?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  usernameOrEmail?: string;
+
   @ApiProperty()
   @IsString()
   password!: string;

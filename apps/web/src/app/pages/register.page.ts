@@ -7,16 +7,13 @@ import { AuthService } from '../core/auth.service';
   selector: 'app-register',
   imports: [FormsModule, RouterLink],
   template: `
-    <div class="auth-split">
-      <div class="auth-visual">
-        <img src="/assets/login-cover.svg" alt="Sala de mesas del café Gambito" />
-        <div class="auth-visual-overlay">
-          <h1>Gambito</h1>
-          <p>Alta de visitante. La mesa se reserva después.</p>
-        </div>
-      </div>
+    <div class="auth-panel">
+      <aside class="auth-brand">
+        <p class="brand-kicker">Huella</p>
+        <h1>Registra al tutor. Luego ficha al perro.</h1>
+      </aside>
       <div class="auth-form-side">
-        <h2>Registro</h2>
+        <h2>Crear cuenta</h2>
         <form (ngSubmit)="submit()">
           <label for="username">Usuario</label>
           <input id="username" name="username" type="text" autocomplete="off"
@@ -32,7 +29,7 @@ import { AuthService } from '../core/auth.service';
           }
           <button class="btn btn-primary" type="submit" [disabled]="auth.loading()">Crear cuenta</button>
         </form>
-        <p class="auth-alt">¿Ya juegas? <a routerLink="/login">Entrar</a></p>
+        <p class="auth-alt">¿Ya tienes ficha? <a routerLink="/login">Entrar</a></p>
       </div>
     </div>
   `,
@@ -48,11 +45,15 @@ export class RegisterPageComponent {
   submit() {
     this.error.set('');
     if (!this.username() || !this.email() || !this.password()) {
-      this.error.set('Completa todos los campos');
+      this.error.set('Completa usuario, email y contraseña');
       return;
     }
-    this.auth.register({ username: this.username(), email: this.email(), password: this.password() }).subscribe({
-      next: () => void this.router.navigateByUrl('/'),
+    this.auth.register({
+      username: this.username(),
+      email: this.email(),
+      password: this.password(),
+    }).subscribe({
+      next: () => void this.router.navigateByUrl('/perros/nuevo'),
       error: (err) => this.error.set(err?.error?.message || 'No se pudo registrar'),
     });
   }

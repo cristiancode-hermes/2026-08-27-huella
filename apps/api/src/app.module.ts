@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ALL_ENTITIES } from './entities/entities';
 import { AuthModule } from './auth/auth.module';
-import { CafeModule } from './cafe/cafe.module';
+import { YardModule } from './yard/yard.module';
 import { SeedModule } from './seed/seed.module';
 
 @Module({
@@ -28,14 +28,14 @@ import { SeedModule } from './seed/seed.module';
         }
         return {
           type: 'better-sqlite3' as const,
-          database: config.get<string>('DATABASE_PATH', 'data/gambito.db'),
+          database: config.get<string>('DATABASE_PATH', 'data/huella.db'),
           entities: ALL_ENTITIES,
           synchronize: true,
         };
       },
     }),
     AuthModule,
-    CafeModule,
+    YardModule,
     SeedModule,
   ],
 })

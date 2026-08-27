@@ -73,6 +73,7 @@ export class AuthService {
       .post<AuthResponse>(`${API}/auth/login`, {
         identifier: payload.identifier,
         login: payload.identifier,
+        usernameOrEmail: payload.identifier,
         password: payload.password,
       })
       .pipe(

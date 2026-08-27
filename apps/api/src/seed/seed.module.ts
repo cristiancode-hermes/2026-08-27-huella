@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ALL_ENTITIES } from '../entities/entities';
 import { SeedService } from './seed.service';
-import { CafeModule } from '../cafe/cafe.module';
+import { SeedController } from './seed.controller';
+import { YardModule } from '../yard/yard.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature(ALL_ENTITIES), CafeModule],
+  imports: [TypeOrmModule.forFeature(ALL_ENTITIES), YardModule],
+  controllers: [SeedController],
   providers: [SeedService],
 })
 export class SeedModule {}

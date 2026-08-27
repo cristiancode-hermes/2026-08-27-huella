@@ -24,7 +24,7 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   return true;
 };
 
-export function roleGuard(roles: Array<'visitor' | 'staff' | 'admin'>): CanActivateFn {
+export function roleGuard(roles: Array<'tutor' | 'staff' | 'admin'>): CanActivateFn {
   return async () => {
     const auth = inject(AuthService);
     const router = inject(Router);

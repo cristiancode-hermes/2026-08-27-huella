@@ -1,13 +1,26 @@
-# API — Gambito
+# API — Huella
 
-Prefijo `/api`. Auth: `identifier` o `login` + password.
+Prefijo `/api`. Puerto 3076.
 
-Conflictos 409: `ALREADY_HELD`, `ALREADY_BOOKED`, `TABLE_TAKEN`, `NO_COPIES`, `CAFE_CLOSED`, `TABLE_FULL`, `ALREADY_CHECKED_IN`, `TOO_LATE`, `NOT_CONFIRMABLE`.
+## Auth
 
-Hold: `POST /api/slots/:id/hold` `{ tableId, partySize, gameIds, addonIds }`.
+- `POST /api/auth/register` `{ username, email, password }`
+- `POST /api/auth/login` `{ identifier | login | usernameOrEmail, password }`
+- `GET /api/auth/me`
 
-Confirmación: `POST /api/bookings/:id/confirm` → `{ booking, qrSvg, qrUrl }`.
+## Patio
 
-Pase público: `GET /api/bookings/ticket/:code`.
+- `GET /api/groups` y `GET /api/groups/:id` incluyen `freeSlotsToday`
+- `GET /api/groups/:id/slots?date=`
+- `GET /api/addons`
+- `GET /api/yard-days/:date`
+- `GET /api/dogs` CRUD
+- `POST /api/bookings/hold`
+- `POST /api/bookings/:id/confirm` → `{ qrSvg, qrUrl }`
+- `GET /api/bookings/ticket/:code` público
+- `POST /api/staff/check-in` / `check-out` `{ codeOrUrl }`
+- `GET /api/staff/pack` / `GET /api/staff/stats`
+- `GET /api/health`
+- `POST /api/seed`
 
-Check-in: `POST /api/staff/check-in` `{ code }` (código o URL).
+409 con `{ code, message }` humano: `GROUP_FULL`, `YARD_CLOSED`, `ALREADY_HELD`, `ALREADY_BOOKED`, `DOG_NOT_READY`, `HOLD_EXPIRED`, `ALREADY_CHECKED_IN`, `PICKUP_DENIED`, `CANCEL_WINDOW`.

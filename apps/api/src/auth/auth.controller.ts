@@ -17,7 +17,7 @@ export class AuthController {
 
   @Post('login')
   login(@Body() dto: LoginDto) {
-    const identifier = dto.identifier || dto.login || '';
+    const identifier = dto.identifier || dto.login || dto.usernameOrEmail || '';
     return this.auth.login({ identifier, password: dto.password });
   }
 

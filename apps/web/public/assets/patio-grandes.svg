@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Patio de manada grande">
+  <rect width="800" height="500" fill="#E6EBE7"/>
+  <rect x="0" y="300" width="800" height="200" fill="#A8B5AD"/>
+  <rect x="60" y="120" width="40" height="220" fill="#18472B"/>
+  <rect x="160" y="80" width="50" height="260" fill="#215C38"/>
+  <rect x="680" y="90" width="46" height="250" fill="#18472B"/>
+  <ellipse cx="400" cy="340" rx="260" ry="40" fill="#4A554E" opacity=".2"/>
+  <circle cx="300" cy="360" r="36" fill="#A33B16"/>
+  <circle cx="430" cy="350" r="42" fill="#8B2E10"/>
+</svg>

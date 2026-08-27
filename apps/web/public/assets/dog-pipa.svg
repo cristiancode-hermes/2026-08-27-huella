@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Pipa">
+  <rect width="200" height="200" fill="#F2F4F3"/>
+  <circle cx="100" cy="112" r="50" fill="#C5CFC8"/>
+  <circle cx="72" cy="70" r="18" fill="#4A554E"/>
+  <circle cx="128" cy="70" r="18" fill="#4A554E"/>
+  <circle cx="86" cy="108" r="5" fill="#161C18"/>
+  <circle cx="114" cy="108" r="5" fill="#161C18"/>
+</svg>

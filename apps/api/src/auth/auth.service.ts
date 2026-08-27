@@ -22,7 +22,7 @@ export class AuthService {
       username: dto.username.toLowerCase().trim(),
       email: dto.email.toLowerCase().trim(),
       passwordHash,
-      role: 'visitor',
+      role: 'tutor',
       points: 0,
     } as any)) as User;
     return this.tokenResponse(user);

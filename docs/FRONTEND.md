@@ -1,11 +1,13 @@
-# Frontend — Gambito
+# FRONTEND — Huella
 
-Rutas auth (`/login`, `/entrar`, `/registro`) y `/partida/:code` **antes** del shell `**`.
+Angular 22 standalone + signals + `provideZonelessChangeDetection` + `withFetch()`.
 
-Login split-screen 50/50, credenciales demo debajo, inputs vacíos.
+Rutas auth y `/pase/:code` **antes** del shell `**`. `/entrar` alias de `/login`.
 
-QR con `bypassSecurityTrustHtml`.
+Login: panel lateral de marca. Credenciales demo debajo. Inputs vacíos, `autocomplete="off"` / `new-password`.
 
-Tokens «Fieltro de Medianoche». Toggle tema icono sol/luna.
+Checkout: total en vivo antes del hold. 409 humano junto a `#hold-action`. Timer `mm:ss` con resync `visibilitychange`.
 
-Checkout muestra total **antes** del hold.
+QR: `DomSanitizer.bypassSecurityTrustHtml`. Tema: sol/luna `aria-label`, clave `huella_theme`.
+
+Paleta Musgo de Recreo. Contraste-hover: `a:hover:not(.btn)` + `color: on-primary` en hover/focus/active.

@@ -5,9 +5,10 @@ import { RouterLink } from '@angular/router';
   selector: 'app-not-found',
   imports: [RouterLink],
   template: `
-    <div class="wrap">
-      <h1>Página no encontrada</h1>
-      <p><a routerLink="/">Volver a la sala</a></p>
+    <div class="wrap state-screen">
+      <h1>Esa senda no existe</h1>
+      <p class="lede">El patio está en la portada.</p>
+      <a class="btn btn-primary" routerLink="/">Volver</a>
     </div>
   `,
 })

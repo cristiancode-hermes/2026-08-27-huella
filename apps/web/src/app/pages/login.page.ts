@@ -7,17 +7,15 @@ import { AuthService } from '../core/auth.service';
   selector: 'app-login',
   imports: [FormsModule, RouterLink],
   template: `
-    <div class="auth-split">
-      <div class="auth-visual">
-        <img src="/assets/login-cover.svg" alt="Tapete de café de juegos con meeples y dados" />
-        <div class="auth-visual-overlay">
-          <h1>Gambito</h1>
-          <p>Mesa, caja real, pase en el bolsillo.</p>
-        </div>
-      </div>
+    <div class="auth-panel">
+      <aside class="auth-brand">
+        <p class="brand-kicker">Huella</p>
+        <h1>Patio abierto. Ficha en regla. Pase en el bolsillo.</h1>
+        <p>La manada tiene aforo. El QR abre el umbral a la hora de recoger.</p>
+      </aside>
       <div class="auth-form-side">
         <h2>Entrar</h2>
-        <p class="lede">Usuario o email. Sin caja, sin relleno.</p>
+        <p class="lede">Usuario o email. Sin caja.</p>
         <form (ngSubmit)="submit()">
           <label for="identifier">Usuario o email</label>
           <input id="identifier" name="identifier" type="text" autocomplete="off"
@@ -35,8 +33,8 @@ import { AuthService } from '../core/auth.service';
         <p class="auth-alt">¿Primera visita? <a routerLink="/registro">Crea cuenta</a></p>
         <div class="auth-demo">
           <p>Cuenta de prueba con datos</p>
-          <code>gambito</code> o <code>demo@gambito.dev</code>
-          <code>demo1234</code>
+          <code>nora</code> o <code>nora@huella.test</code>
+          <code>Huella2026!</code>
         </div>
       </div>
     </div>
